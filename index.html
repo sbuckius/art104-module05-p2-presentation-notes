@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Peer Review — Nature Module 05</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,800;1,9..144,300;1,9..144,600&family=Space+Grotesk:wght@300;400;500;600&family=Courier+Prime:ital@0;1&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --moss:#2d5a1b;
+  --fern:#4a8c2a;
+  --sage:#8ab87a;
+  --mist:#c8dfc0;
+  --tide:#1a4a5a;
+  --ocean:#2a7090;
+  --sky:#5aaec8;
+  --foam:#d8eef5;
+  --cream:#f4f8f0;
+  --ink:#1a2e1a;
+  --dim:#4a6a4a;
+  --rule:#a8c8a0;
+  --warm:#edf5e8;
+  --dew:#e0f2e8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--cream);color:var(--ink);font-family:'Space Grotesk',sans-serif;font-weight:300;min-height:100vh}
+.screen{display:none}.screen.active{display:block}
+
+/* Setup Screen */
+#setupScreen.active{display:flex;min-height:100vh;align-items:center;justify-content:center;background:var(--tide);position:relative;overflow:hidden}
+#setupScreen::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;border:2px solid rgba(90,174,200,.12);top:-200px;right:-200px;box-shadow:inset 0 0 200px rgba(90,174,200,.08)}
+#setupScreen::after{content:'';position:absolute;width:400px;height:400px;border-radius:50%;border:2px solid rgba(74,140,42,.1);bottom:-150px;left:-100px}
+.bg-leaf{position:absolute;font-size:300px;opacity:.03;color:white;top:50px;right:-30px;line-height:1;user-select:none;pointer-events:none}
+.bg-leaf2{position:absolute;font-size:200px;opacity:.04;color:var(--sage);bottom:20px;left:-20px;line-height:1;user-select:none;pointer-events:none;transform:rotate(45deg)}
+.scard{background:var(--cream);border-radius:6px;padding:52px 56px;width:100%;max-width:480px;position:relative;z-index:1;box-shadow:0 40px 100px rgba(0,0,0,.4);border-left:5px solid var(--fern)}
+.scard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--fern),var(--ocean),var(--sky));border-radius:6px 6px 0 0}
+.eyebrow{font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--ocean);margin-bottom:14px;font-weight:500}
+.scard h1{font-family:'Fraunces',serif;font-size:44px;font-weight:800;letter-spacing:-1px;line-height:1;color:var(--ink);margin-bottom:10px}
+.scard h1 span{color:var(--fern)}
+.ssub{font-size:12px;color:var(--dim);margin-bottom:30px;line-height:1.7}
+.tabs{display:flex;margin-bottom:28px;gap:4px}
+.tab-btn{flex:1;padding:11px;text-align:center;font-size:11px;font-weight:500;cursor:pointer;background:transparent;border:2px solid var(--rule);border-radius:3px;font-family:'Space Grotesk',sans-serif;color:var(--dim);letter-spacing:2px;text-transform:uppercase;transition:all .2s}
+.tab-btn.active{background:var(--fern);border-color:var(--fern);color:white;font-weight:600}
+.fg{margin-bottom:16px}
+.fl{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--dim);margin-bottom:7px;display:block;font-weight:500}
+.fi{width:100%;border:2px solid var(--rule);border-radius:3px;padding:13px 15px;font-family:'Space Grotesk',sans-serif;font-size:14px;color:var(--ink);background:var(--warm);outline:none;transition:border-color .2s}
+.fi:focus{border-color:var(--fern);background:white}
+.btn-enter{width:100%;background:var(--tide);border:none;color:white;padding:16px;border-radius:3px;font-family:'Fraunces',serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:8px;letter-spacing:1px}
+.btn-enter:hover{background:var(--ocean);color:var(--foam)}
+.err{font-size:11px;color:#c0392b;min-height:18px;margin-bottom:8px}
+.rbox{background:var(--dew);border:2px solid var(--fern);border-radius:3px;padding:14px 16px;margin-bottom:20px;font-size:12px;line-height:1.6;color:var(--ink);display:none}
+.rbox strong{color:var(--ocean)}
+.rbtns{display:flex;gap:8px;margin-top:10px}
+.rbtn{padding:8px 16px;border-radius:3px;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:500;cursor:pointer;border:2px solid;transition:all .2s;text-transform:uppercase;letter-spacing:1px}
+.rbtn-y{background:var(--fern);border-color:var(--fern);color:white}.rbtn-y:hover{background:var(--ocean);border-color:var(--ocean)}
+.rbtn-n{background:transparent;border-color:var(--rule);color:var(--dim)}.rbtn-n:hover{border-color:#c0392b;color:#c0392b}
+
+/* Nav */
+#appNav{display:none;background:var(--tide);padding:13px 40px;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--fern)}
+#appNav.on{display:flex}
+.nbrand{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:white;letter-spacing:.5px}
+.nmod{font-size:10px;color:rgba(200,220,255,.5);letter-spacing:2px;margin-top:1px}
+.nmeta{font-size:12px;color:rgba(200,220,255,.6)}.nmeta strong{color:var(--sky)}
+.btn-nav{background:none;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.5);padding:6px 14px;border-radius:3px;font-size:11px;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .2s;letter-spacing:1px}
+.btn-nav:hover{border-color:var(--sky);color:var(--sky)}
+
+/* Student App */
+main{max-width:860px;margin:0 auto;padding:44px 24px 150px}
+.phead{margin-bottom:40px;padding-bottom:28px;position:relative}
+.phead::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--fern),var(--ocean),transparent)}
+.phead h2{font-family:'Fraunces',serif;font-size:46px;font-weight:800;letter-spacing:-1px;line-height:1.05}
+.phead h2 em{font-style:italic;color:var(--ocean);font-weight:300}
+.psub{margin-top:12px;font-size:12px;color:var(--dim);line-height:1.7}
+.pwrap{margin-bottom:36px}
+.pmeta{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);margin-bottom:8px;letter-spacing:1px}
+.ptrack{height:5px;background:var(--mist);border-radius:99px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,var(--fern),var(--ocean));border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.pc{background:white;border:2px solid var(--mist);border-radius:5px;margin-bottom:16px;overflow:hidden;transition:box-shadow .3s,border-color .3s}
+.pc.done{border-color:var(--fern);border-left:5px solid var(--fern)}
+.pc.draft{border-color:var(--ocean);border-left:5px solid var(--ocean)}
+.ph{background:var(--tide);padding:16px 26px;display:flex;align-items:center;gap:16px;cursor:pointer;user-select:none;transition:background .2s}
+.ph:hover{background:#1e566a}
+.pn{font-family:'Fraunces',serif;font-size:32px;font-weight:800;color:rgba(90,174,200,.35);line-height:1;min-width:34px}
+.pm{flex:1}
+.ps{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:rgba(90,174,200,.4);margin-bottom:3px}
+.pt{font-family:'Fraunces',serif;font-size:18px;color:white;font-style:italic;font-weight:300}
+.badge{font-size:10px;padding:4px 12px;border-radius:2px;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.3);white-space:nowrap;letter-spacing:1px;text-transform:uppercase;transition:all .3s}
+.badge.ok{border-color:var(--sage);color:var(--sage);background:rgba(74,140,42,.15)}
+.badge.draft{border-color:var(--sky);color:var(--sky);background:rgba(90,174,200,.12)}
+.chev{font-size:14px;color:rgba(255,255,255,.25);margin-left:8px}
+.pb{display:none;padding:28px 30px}.pb.open{display:block}
+.sec{margin-bottom:20px}
+.slabel{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--dim);font-weight:500;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.slabel::before{content:'';width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.slabel.pos::before{background:var(--fern)}.slabel.con::before{background:var(--ocean)}
+.brow{display:flex;gap:12px;align-items:flex-start}
+.bsel{flex-shrink:0;width:210px;border:2px solid var(--rule);border-radius:3px;padding:10px 12px;font-family:'Space Grotesk',sans-serif;font-size:11px;color:var(--dim);background:var(--warm);outline:none;cursor:pointer;appearance:none;transition:border-color .2s;letter-spacing:.5px}
+.bsel:focus{border-color:var(--fern)}
+.bta{flex:1;border:2px solid var(--rule);border-radius:3px;padding:10px 14px;font-family:'Space Grotesk',sans-serif;font-size:13px;color:var(--ink);background:var(--warm);outline:none;resize:vertical;min-height:52px;line-height:1.6;transition:border-color .2s}
+.bta:focus{border-color:var(--fern);background:white}
+.bta.dg{border-color:var(--ocean)!important}
+.asn{font-size:10px;color:var(--ocean);letter-spacing:1px;margin-bottom:12px;min-height:14px;opacity:0;transition:opacity .3s}
+.asn.show{opacity:1}
+.ca{display:flex;justify-content:flex-end;margin-top:18px;align-items:center;gap:12px}
+.btn-sub{background:var(--tide);color:white;border:none;padding:12px 28px;border-radius:3px;font-family:'Fraunces',serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.btn-sub:hover{background:var(--ocean);color:var(--foam)}
+.dlabel{background:var(--dew);color:var(--fern);border:2px solid var(--fern);padding:11px 22px;border-radius:3px;font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase}
+
+/* Live feed */
+.lsec{margin-top:20px;border-top:2px dashed var(--rule);padding-top:16px}
+.llbl{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--fern);font-weight:500;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.ldot{width:6px;height:6px;background:var(--fern);border-radius:50%;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+.llist{display:flex;flex-direction:column;gap:10px}
+.li{background:var(--warm);border:1px solid var(--rule);border-radius:3px;padding:12px 16px;animation:fu .4s ease}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.lauth{font-size:10px;font-weight:500;color:var(--ocean);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.lbul{display:flex;gap:8px;align-items:flex-start;margin-bottom:5px;font-size:12px;line-height:1.5}
+.lbul:last-child{margin-bottom:0}
+.ltag{flex-shrink:0;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:2px;font-weight:500;margin-top:2px}
+.tp{background:var(--dew);color:var(--moss)}.tc{background:var(--foam);color:var(--tide)}
+.lempty{font-size:12px;color:var(--dim);font-style:italic}
+
+/* Min bar */
+#minBar{position:fixed;bottom:0;left:0;right:0;background:var(--tide);color:white;padding:14px 32px;display:none;align-items:center;justify-content:space-between;z-index:200;box-shadow:0 -4px 24px rgba(0,0,0,.25);font-size:12px;gap:16px;flex-wrap:wrap;border-top:3px solid var(--fern)}
+#minBar.on{display:flex}
+#minCount{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--sky);white-space:nowrap}
+
+/* Admin */
+.ahdr{background:var(--tide);padding:36px 48px;position:relative;overflow:hidden;border-bottom:4px solid var(--fern)}
+.ahdr::after{content:'';position:absolute;right:-80px;top:-80px;width:300px;height:300px;border-radius:50%;border:60px solid rgba(90,174,200,.07)}
+.ahdr h1{font-family:'Fraunces',serif;font-size:38px;font-weight:800;letter-spacing:-1px;color:white}
+.ahdr h1 span{color:var(--sky)}
+.stats{display:flex;gap:36px;margin-top:16px;flex-wrap:wrap}
+.snum{font-family:'Fraunces',serif;font-size:34px;font-weight:800;color:var(--sky);line-height:1}
+.slbl{font-size:10px;color:rgba(200,230,255,.4);letter-spacing:2px;text-transform:uppercase}
+.amain{max-width:1100px;margin:0 auto;padding:36px 24px 80px}
+.atabs{display:flex;gap:0;margin-bottom:28px;border-bottom:2px solid var(--mist)}
+.atab{padding:10px 24px;background:none;border:none;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:500;color:var(--dim);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;letter-spacing:2px;text-transform:uppercase}
+.atab.active{color:var(--ocean);border-bottom-color:var(--ocean)}
+.controls{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+.asearch{flex:1;min-width:200px;border:2px solid var(--rule);border-radius:3px;padding:10px 14px;font-family:'Space Grotesk',sans-serif;font-size:12px;background:var(--warm);color:var(--ink);outline:none}
+.asearch:focus{border-color:var(--fern)}
+.btn-a{background:var(--warm);border:2px solid var(--rule);color:var(--ink);padding:10px 18px;border-radius:3px;font-family:'Space Grotesk',sans-serif;font-size:11px;cursor:pointer;transition:all .2s;white-space:nowrap;letter-spacing:1px;text-transform:uppercase}
+.btn-a:hover{border-color:var(--fern);background:var(--dew)}
+.btn-d{border-color:#ffcccc;color:#c0392b}.btn-d:hover{background:#c0392b;color:white;border-color:#c0392b}
+.btn-p{background:var(--tide);border:none;color:white;padding:11px 22px;border-radius:3px;font-family:'Fraunces',serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-p:hover{background:var(--ocean);color:var(--foam)}
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
+.acard{background:white;border:2px solid var(--mist);border-radius:5px;overflow:hidden}
+.acard-h{background:var(--dew);padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:2px solid var(--mist)}
+.acard-n{font-family:'Fraunces',serif;font-size:26px;font-weight:800;color:var(--fern);line-height:1}
+.acard-t{font-family:'Fraunces',serif;font-size:15px;color:var(--ink);flex:1;font-style:italic;font-weight:300}
+.acnt{font-size:10px;background:var(--fern);color:white;padding:3px 10px;border-radius:2px;font-weight:700}
+.acard-b{padding:14px;max-height:340px;overflow-y:auto}
+.aresp{border-bottom:1px solid var(--mist);padding:10px 0}.aresp:last-child{border-bottom:none}
+.aname{font-size:10px;font-weight:500;color:var(--ocean);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.abullet{display:flex;gap:8px;font-size:12px;line-height:1.5;margin-bottom:4px;align-items:flex-start}
+.atag{flex-shrink:0;font-size:8px;letter-spacing:.5px;text-transform:uppercase;padding:2px 6px;border-radius:2px;font-weight:500;margin-top:2px}
+.aempty{font-size:12px;color:var(--dim);font-style:italic;padding:8px 0}
+.allrow{background:white;border:2px solid var(--mist);border-radius:4px;padding:18px 22px;display:grid;grid-template-columns:140px 1fr 1fr;gap:16px;align-items:start;margin-bottom:12px}
+.allauthor{font-size:12px;font-weight:500;color:var(--ocean)}
+.allpres{font-size:11px;color:var(--dim);margin-top:2px}
+.alltime{font-size:10px;color:#bbb;margin-top:4px}
+.clbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.clbl.p{color:var(--fern)}.clbl.c{color:var(--ocean)}
+.ctype{font-size:11px;color:var(--dim);margin-bottom:4px}.ctext{font-size:12px}
+.set-sec{margin-bottom:36px}
+.set-sec h3{font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:16px}
+.erow{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.enum{font-family:'Fraunces',serif;font-size:22px;font-weight:800;color:var(--fern);min-width:28px}
+.einput{flex:1;border:2px solid var(--rule);border-radius:3px;padding:10px 14px;font-family:'Space Grotesk',sans-serif;font-size:13px;color:var(--ink);background:var(--warm);outline:none}
+.einput:focus{border-color:var(--fern);background:white}
+.btn-rm{background:none;border:1px solid var(--rule);color:#bbb;padding:8px 12px;border-radius:3px;cursor:pointer;font-size:12px;transition:all .2s}
+.btn-rm:hover{border-color:#c0392b;color:#c0392b}
+.form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.pwd-form{max-width:360px;display:flex;flex-direction:column;gap:14px}
+#pwdMsg{font-size:11px;min-height:16px}
+@media(max-width:640px){.scard{padding:36px 24px}.ahdr{padding:24px 20px}.amain{padding:24px 16px 60px}main{padding:28px 16px 150px}.allrow{grid-template-columns:1fr}.brow{flex-direction:column}.bsel{width:100%}#appNav{padding:12px 20px}}
+</style>
+</head>
+<body>
+
+<div id="setupScreen" class="screen active">
+  <div class="bg-leaf">🌿</div>
+  <div class="bg-leaf2">◈</div>
+  <div class="scard">
+    <div class="eyebrow">Art 104 — Module 05 [P2]</div>
+    <h1>Peer <span>Review</span></h1>
+    <p style="font-family:'Fraunces',serif;font-size:18px;font-style:italic;color:var(--ocean);margin-bottom:6px;font-weight:300">Nature: Speculative Artwork</p>
+    <p class="ssub">Enter your name to begin, or sign in as an instructor.</p>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('s')">Student</button>
+      <button class="tab-btn" onclick="switchTab('a')">Instructor</button>
+    </div>
+    <div id="sForm">
+      <div id="rbox" class="rbox">
+        <strong>Draft found!</strong> Restore your previous work?
+        <div class="rbtns">
+          <button class="rbtn rbtn-y" onclick="restoreDraft()">Restore</button>
+          <button class="rbtn rbtn-n" onclick="discardDraft()">Start fresh</button>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Your Name</label><input class="fi" id="sName" type="text" placeholder="First Last" oninput="checkRestore()" onkeydown="if(event.key==='Enter')goStudent()"/></div>
+      <div class="err" id="sErr"></div>
+      <button class="btn-enter" onclick="goStudent()">Begin Review</button>
+    </div>
+    <div id="aForm" style="display:none">
+      <div class="fg"><label class="fl">Admin Password</label><input class="fi" id="aPwd" type="password" placeholder="password" onkeydown="if(event.key==='Enter')goAdmin()"/></div>
+      <div class="err" id="aErr"></div>
+      <button class="btn-enter" onclick="goAdmin()">Enter Dashboard</button>
+    </div>
+  </div>
+</div>
+
+<nav id="appNav">
+  <div><div class="nbrand">Peer Review</div><div class="nmod">Art 104 — Module 05 [P2] · Nature</div></div>
+  <div style="display:flex;align-items:center;gap:14px">
+    <div class="nmeta">Signed in as <strong id="navName"></strong></div>
+    <button class="btn-nav" onclick="signOut()">Exit</button>
+  </div>
+</nav>
+
+<div id="studentApp" class="screen">
+  <main>
+    <div class="phead">
+      <div class="eyebrow">Module 05 [P2] · Nature</div>
+      <h2>Peer <em>Review</em> Notes</h2>
+      <p class="psub">Write one positive observation and one constructive suggestion for each presentation. <strong>Review at least 5</strong> — you're welcome to do all 7.</p>
+    </div>
+    <div class="pwrap">
+      <div class="pmeta"><span id="progLbl">0 of 7 reviewed</span><span id="progPct">0%</span></div>
+      <div class="ptrack"><div class="pfill" id="progFill" style="width:0%"></div></div>
+    </div>
+    <div id="presContainer"></div>
+  </main>
+  <div id="minBar">
+    <span id="minTxt" style="color:rgba(200,230,255,.5)">Review at least <strong style="color:var(--sky)">5 presentations</strong> to complete.</span>
+    <div style="display:flex;align-items:center;gap:16px;flex-shrink:0">
+      <span id="minCount">0 / 5</span>
+      <button id="pdfBtn" onclick="exportPDF()" style="display:none;background:var(--fern);border:none;color:white;padding:10px 22px;border-radius:3px;font-family:'Fraunces',serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;letter-spacing:.5px">Export PDF</button>
+    </div>
+  </div>
+</div>
+
+<div id="adminApp" class="screen">
+  <div class="ahdr">
+    <div class="eyebrow">Instructor Dashboard — Art 104 — Module 05 [P2]</div>
+    <h1>Peer Review <span>Live</span></h1>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-top:16px">
+      <div class="stats" style="margin-top:0">
+        <div><div class="snum" id="stTotal">0</div><div class="slbl">Responses</div></div>
+        <div><div class="snum" id="stStudents">0</div><div class="slbl">Students</div></div>
+        <div><div class="snum" id="stPres">7</div><div class="slbl">Presentations</div></div>
+      </div>
+      <button id="clearBtn" onclick="doClear()" style="background:none;border:2px solid #c0392b;color:#e74c3c;padding:11px 24px;border-radius:3px;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;letter-spacing:1px;text-transform:uppercase">Reset All Responses</button>
+    </div>
+  </div>
+  <div class="amain">
+    <div class="atabs">
+      <button class="atab active" onclick="aTab('byPres')">By Presentation</button>
+      <button class="atab" onclick="aTab('all')">All Responses</button>
+      <button class="atab" onclick="aTab('settings')">Settings</button>
+    </div>
+    <div id="tab-byPres">
+      <div class="controls">
+        <input class="asearch" id="srchPres" placeholder="Search..." oninput="renderByPres()"/>
+        <button class="btn-a" onclick="doExport()">Export CSV</button>
+      </div>
+      <div class="agrid" id="agrid"></div>
+    </div>
+    <div id="tab-all" style="display:none">
+      <div class="controls">
+        <input class="asearch" id="srchAll" placeholder="Search..." oninput="renderAll()"/>
+        <button class="btn-a btn-d" onclick="doClear()">Clear All</button>
+      </div>
+      <div id="allWrap"></div>
+    </div>
+    <div id="tab-settings" style="display:none">
+      <div class="set-sec">
+        <h3>Presentation Titles</h3>
+        <div id="editList"></div>
+        <div class="form-actions">
+          <button class="btn-p" onclick="saveTitles()">Save Titles</button>
+          <button class="btn-a" onclick="addRow()">+ Add</button>
+        </div>
+      </div>
+      <div class="set-sec">
+        <h3>Change Password</h3>
+        <div class="pwd-form">
+          <div class="fg"><label class="fl">New Password</label><input class="fi" id="p1" type="password"/></div>
+          <div class="fg"><label class="fl">Confirm</label><input class="fi" id="p2" type="password"/></div>
+          <div id="pwdMsg"></div>
+          <button class="btn-p" onclick="doChangePwd()" style="width:fit-content">Update Password</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, setDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const cfg = {apiKey:"AIzaSyDoUOk5RkQWfj1NGPWZHWo70RwvfDsSDgg",authDomain:"art104-module05-p2-presentatio.firebaseapp.com",projectId:"art104-module05-p2-presentatio",storageBucket:"art104-module05-p2-presentatio.firebasestorage.app",messagingSenderId:"604715628048",appId:"1:604715628048:web:5db0791c65216ed2617c95"};
+const app = initializeApp(cfg);
+const db = getFirestore(app);
+window._db=db;
+window._col=collection;
+window._add=addDoc;
+window._snap=onSnapshot;
+window._q=query;
+window._ord=orderBy;
+window._ts=serverTimestamp;
+window._doc=doc;
+window._set=setDoc;
+window._getDocs=function(r){return getDocs(r);};
+window._deleteDoc=function(r){return deleteDoc(r);};
+window._fbOK=true;
+document.dispatchEvent(new Event('fb-ready'));
+</script>
+
+<script>
+var user='',admin=false,adminPwd='teacher123';
+var pres=['Presentation 1','Presentation 2','Presentation 3','Presentation 4','Presentation 5','Presentation 6','Presentation 7'];
+var done=new Set(),live={},kills=[],autoTimer=null;
+var POS=['Something that I loved about this project','Something that is working well','Something about the concept that is interesting','Something about the formal aspects of the work that I find interesting'];
+var CON=['A suggestion for the formal aspects of the work','A suggestion for the conceptual aspects of the work','An idea to push the project further','An idea to expand the project','A suggested revision to the project'];
+
+function $i(id){return document.getElementById(id);}
+function xe(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function pad(n){return String(n).padStart(2,'0');}
+function tag(t){var m={'Something that I loved about this project':'Loved','Something that is working well':'Working','Something about the concept that is interesting':'Concept','Something about the formal aspects of the work that I find interesting':'Formal','A suggestion for the formal aspects of the work':'Formal+','A suggestion for the conceptual aspects of the work':'Concept+','An idea to push the project further':'Push','An idea to expand the project':'Expand','A suggested revision to the project':'Revise'};return m[t]||(t?t.slice(0,8):'-');}
+function col(i){return window._col(window._db,'presentations_m05/'+i+'/responses');}
+function cfgRef(){return window._doc(window._db,'config','app_m05');}
+function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});$i(id).classList.add('active');}
+function switchTab(t){document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',(i===0&&t==='s')||(i===1&&t==='a'));});$i('sForm').style.display=t==='s'?'block':'none';$i('aForm').style.display=t==='a'?'block':'none';}
+function draftKey(n){return 'pr_m05_'+n.toLowerCase().replace(/\s+/g,'_');}
+function saveDraft(){if(!user)return;var d={user:user,pres:pres,done:Array.from(done),fields:{}};pres.forEach(function(_,i){var s1=$i('s1-'+i),t1=$i('t1-'+i),s2=$i('s2-'+i),t2=$i('t2-'+i);if(s1)d.fields[i]={s1:s1.value,t1:t1.value,s2:s2.value,t2:t2.value};});try{localStorage.setItem(draftKey(user),JSON.stringify(d));}catch(e){}}
+function loadDraft(n){try{var r=localStorage.getItem(draftKey(n));return r?JSON.parse(r):null;}catch(e){return null;}}
+function clearDraft(n){try{localStorage.removeItem(draftKey(n));}catch(e){}}
+function checkRestore(){var n=$i('sName').value.trim(),box=$i('rbox');if(n.length>1){var d=loadDraft(n);if(d&&d.fields&&Object.keys(d.fields).length>0){box.style.display='block';return;}}box.style.display='none';}
+function restoreDraft(){$i('rbox').style.display='none';var n=$i('sName').value.trim();if(!n)return;var d=loadDraft(n);if(!d)return;window._pd=d;goStudent(true);}
+function discardDraft(){var n=$i('sName').value.trim();if(n)clearDraft(n);$i('rbox').style.display='none';}
+function applyDraft(d){if(!d||!d.fields)return;if(d.done)d.done.forEach(function(i){done.add(parseInt(i));});Object.keys(d.fields).forEach(function(i){var f=d.fields[i],s1=$i('s1-'+i),t1=$i('t1-'+i),s2=$i('s2-'+i),t2=$i('t2-'+i);if(s1&&f.s1)s1.value=f.s1;if(t1&&f.t1){t1.value=f.t1;t1.classList.add('dg');}if(s2&&f.s2)s2.value=f.s2;if(t2&&f.t2){t2.value=f.t2;t2.classList.add('dg');}});done.forEach(function(i){var c=$i('card-'+i);if(c){c.classList.add('done');var b=$i('bdg-'+i);if(b){b.textContent='Submitted';b.classList.add('ok');}var a=$i('act-'+i);if(a)a.innerHTML='<div class="dlabel">Submitted</div>';['s1-'+i,'t1-'+i,'s2-'+i,'t2-'+i].forEach(function(id){var el=$i(id);if(el)el.disabled=true;});}});pres.forEach(function(_,i){if(!done.has(i)){var f=d.fields[i];if(f&&(f.t1||f.t2)){var c=$i('card-'+i);if(c)c.classList.add('draft');var b=$i('bdg-'+i);if(b){b.textContent='Draft';b.classList.add('draft');}}}});updateProg();}
+function scheduleAutosave(){clearTimeout(autoTimer);autoTimer=setTimeout(function(){saveDraft();showNote('Draft saved');},1200);}
+function showNote(msg){document.querySelectorAll('.asn').forEach(function(el){el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);});}
+async function loadCfg(){try{var snap=await window._getDocs(window._col(window._db,'config'));snap.forEach(function(d){if(d.id==='app_m05'){var v=d.data();if(v.presentations&&v.presentations.length)pres=v.presentations;if(v.adminPassword)adminPwd=v.adminPassword;}});}catch(e){console.warn('cfg:',e.message);}}
+async function goStudent(skip){var n=$i('sName').value.trim();if(!n){$i('sErr').textContent='Please enter your name.';return;}if(!window._fbOK){alert('Firebase loading, please wait...');return;}await loadCfg();user=n;admin=false;$i('navName').textContent=n;$i('appNav').classList.add('on');$i('minBar').classList.add('on');show('studentApp');buildCards();if(window._pd){applyDraft(window._pd);window._pd=null;}subAll();}
+async function goAdmin(){var p=$i('aPwd').value;if(!window._fbOK){alert('Firebase loading, please wait...');return;}await loadCfg();if(p!==adminPwd){$i('aErr').textContent='Incorrect password.';$i('aPwd').value='';return;}user='Instructor';admin=true;$i('navName').textContent='Instructor';$i('appNav').classList.add('on');show('adminApp');renderEditList();subAll();updateStats();}
+function signOut(){kills.forEach(function(u){u();});kills=[];done.clear();live={};user='';admin=false;$i('appNav').classList.remove('on');$i('minBar').classList.remove('on');$i('aPwd').value='';$i('sName').value='';$i('sErr').textContent='';$i('aErr').textContent='';$i('rbox').style.display='none';show('setupScreen');}
+function buildCards(){var c=$i('presContainer');c.innerHTML='';pres.forEach(function(t,i){c.appendChild(makeCard(i,t));});updateProg();openCard(0);}
+function makeCard(i,title){var d=document.createElement('div');d.className='pc';d.id='card-'+i;var po=POS.map(function(o){return'<option value="'+xe(o)+'">'+xe(o)+'</option>';}).join('');var co=CON.map(function(o){return'<option value="'+xe(o)+'">'+xe(o)+'</option>';}).join('');d.innerHTML='<div class="ph" onclick="togCard('+i+')"><div class="pn">'+pad(i+1)+'</div><div class="pm"><div class="ps">Presentation '+(i+1)+'</div><div class="pt">'+xe(title)+'</div></div><div class="badge" id="bdg-'+i+'">Not started</div><div class="chev" id="chv-'+i+'">&#9656;</div></div><div class="pb" id="body-'+i+'"><div class="asn" id="asn-'+i+'"></div><div class="sec"><div class="slabel pos">Positive Observation</div><div class="brow"><select class="bsel" id="s1-'+i+'" onchange="onDC('+i+')"><option value="">-- Choose type --</option>'+po+'</select><textarea class="bta" id="t1-'+i+'" placeholder="Write your observation..." rows="2" oninput="onDC('+i+')"></textarea></div></div><div class="sec"><div class="slabel con">Constructive Suggestion</div><div class="brow"><select class="bsel" id="s2-'+i+'" onchange="onDC('+i+')"><option value="">-- Choose type --</option>'+co+'</select><textarea class="bta" id="t2-'+i+'" placeholder="Write your suggestion..." rows="2" oninput="onDC('+i+')"></textarea></div></div><div class="ca" id="act-'+i+'"><button class="btn-sub" onclick="submitCard('+i+')">Submit Review</button></div><div class="lsec"><div class="llbl"><div class="ldot"></div> Live Responses</div><div class="llist" id="liv-'+i+'"><div class="lempty">No responses yet...</div></div></div></div>';return d;}
+function onDC(i){var c=$i('card-'+i),b=$i('bdg-'+i);if(c&&!done.has(i)){c.classList.add('draft');if(b&&!b.classList.contains('ok')){b.textContent='Draft';b.classList.add('draft');}}scheduleAutosave();}
+function togCard(i){var b=$i('body-'+i),c=$i('chv-'+i),open=b.classList.contains('open');document.querySelectorAll('.pb').forEach(function(el){el.classList.remove('open');});document.querySelectorAll('.chev').forEach(function(el){el.innerHTML='&#9656;';});if(!open){b.classList.add('open');c.innerHTML='&#9662;';}}
+function openCard(i){var b=$i('body-'+i),c=$i('chv-'+i);if(b&&c){b.classList.add('open');c.innerHTML='&#9662;';}}
+async function submitCard(i){var b1t=$i('s1-'+i).value.trim(),b1=$i('t1-'+i).value.trim(),b2t=$i('s2-'+i).value.trim(),b2=$i('t2-'+i).value.trim();if(!b1||!b2){alert('Please fill in both fields before submitting.');return;}try{await window._add(col(i),{name:user,b1type:b1t,b1text:b1,b2type:b2t,b2text:b2,ts:window._ts()});done.add(i);var card=$i('card-'+i);card.classList.remove('draft');card.classList.add('done');$i('bdg-'+i).textContent='Submitted';$i('bdg-'+i).classList.remove('draft');$i('bdg-'+i).classList.add('ok');$i('act-'+i).innerHTML='<div class="dlabel">Submitted</div>';['s1-'+i,'t1-'+i,'s2-'+i,'t2-'+i].forEach(function(id){var el=$i(id);if(el)el.disabled=true;});saveDraft();updateProg();if(i+1<pres.length)setTimeout(function(){togCard(i+1);openCard(i+1);},400);}catch(e){alert('Submit error: '+e.message);}}
+function updateProg(){var n=done.size,tot=pres.length,pct=tot?Math.round(n/tot*100):0;$i('progLbl').textContent=n+' of '+tot+' reviewed';$i('progPct').textContent=pct+'%';$i('progFill').style.width=pct+'%';var cnt=$i('minCount'),txt=$i('minTxt'),btn=$i('pdfBtn');if(n>=5){cnt.style.color='var(--sage)';cnt.textContent=n+' reviewed - minimum met!';txt.innerHTML=n>=tot?'<strong style="color:var(--sage)">All '+tot+' reviewed!</strong>':'<span style="color:rgba(200,230,255,.5)">Minimum met!</span>';if(btn)btn.style.display='inline-block';}else{cnt.style.color='var(--sky)';cnt.textContent=n+' / 5 minimum';txt.innerHTML='Review at least <strong style="color:var(--sky)">5 presentations</strong> to complete.';if(btn)btn.style.display='none';}}
+function subAll(){pres.forEach(function(_,i){var q=window._q(col(i),window._ord('ts','asc'));var kill=window._snap(q,function(snap){var rows=[];snap.forEach(function(d){rows.push(Object.assign({id:d.id},d.data()));});live[i]=rows;renderLive(i,rows);if(admin){renderByPres();renderAll();updateStats();}});kills.push(kill);});}
+function renderLive(i,rows){var el=$i('liv-'+i);if(!el)return;if(!rows||!rows.length){el.innerHTML='<div class="lempty">No responses yet...</div>';return;}el.innerHTML=rows.map(function(r){return'<div class="li"><div class="lauth">'+xe(r.name)+'</div><div class="lbul"><span class="ltag tp">'+tag(r.b1type)+'</span><span>'+xe(r.b1text)+'</span></div><div class="lbul"><span class="ltag tc">'+tag(r.b2type)+'</span><span>'+xe(r.b2text)+'</span></div></div>';}).join('');}
+function aTab(t){['byPres','all','settings'].forEach(function(s){$i('tab-'+s).style.display=s===t?'block':'none';});document.querySelectorAll('.atab').forEach(function(b,i){b.classList.toggle('active',['byPres','all','settings'][i]===t);});if(t==='byPres')renderByPres();if(t==='all')renderAll();if(t==='settings')renderEditList();}
+function updateStats(){var tot=0,studs=new Set();Object.values(live).forEach(function(arr){arr.forEach(function(r){tot++;studs.add(r.name);});});$i('stTotal').textContent=tot;$i('stStudents').textContent=studs.size;$i('stPres').textContent=pres.length;}
+function renderByPres(){var q=(($i('srchPres')||{}).value||'').toLowerCase(),g=$i('agrid');g.innerHTML='';pres.forEach(function(title,i){var rows=(live[i]||[]).filter(function(r){return!q||r.name.toLowerCase().includes(q)||r.b1text.toLowerCase().includes(q)||r.b2text.toLowerCase().includes(q);});var card=document.createElement('div');card.className='acard';card.innerHTML='<div class="acard-h"><div class="acard-n">'+pad(i+1)+'</div><div class="acard-t">'+xe(title)+'</div><div class="acnt">'+rows.length+'</div></div><div class="acard-b">'+(rows.length?rows.map(function(r){return'<div class="aresp"><div class="aname">'+xe(r.name)+'</div><div class="abullet"><span class="atag tp">'+tag(r.b1type)+'</span><span>'+xe(r.b1text)+'</span></div><div class="abullet"><span class="atag tc">'+tag(r.b2type)+'</span><span>'+xe(r.b2text)+'</span></div></div>';}).join(''):'<div class="aempty">No responses yet</div>')+'</div>';g.appendChild(card);});}
+function renderAll(){var q=(($i('srchAll')||{}).value||'').toLowerCase(),all=[];pres.forEach(function(t,i){(live[i]||[]).forEach(function(r){all.push(Object.assign({pt:t,pi:i},r));});});all.sort(function(a,b){return((b.ts&&b.ts.seconds)||0)-((a.ts&&a.ts.seconds)||0);});if(q)all=all.filter(function(r){return r.name.toLowerCase().includes(q)||r.b1text.toLowerCase().includes(q)||r.b2text.toLowerCase().includes(q);});var w=$i('allWrap');if(!all.length){w.innerHTML='<div class="aempty" style="padding:20px">No responses yet.</div>';return;}w.innerHTML=all.map(function(r){return'<div class="allrow"><div><div class="allauthor">'+xe(r.name)+'</div><div class="allpres">'+xe(r.pt)+'</div><div class="alltime">'+(r.ts&&r.ts.seconds?new Date(r.ts.seconds*1000).toLocaleTimeString():'')+'</div></div><div><div class="clbl p">Positive</div><div class="ctype">'+xe(r.b1type||'')+'</div><div class="ctext">'+xe(r.b1text)+'</div></div><div><div class="clbl c">Constructive</div><div class="ctype">'+xe(r.b2type||'')+'</div><div class="ctext">'+xe(r.b2text)+'</div></div></div>';}).join('');}
+function renderEditList(){var list=$i('editList');list.innerHTML='';pres.forEach(function(t,i){var row=document.createElement('div');row.className='erow';row.innerHTML='<div class="enum">'+(i+1)+'</div><input class="einput" id="ep-'+i+'" type="text" value="'+xe(t)+'"/><button class="btn-rm" onclick="removeRow('+i+')">x</button>';list.appendChild(row);});}
+function addRow(){pres.push('Presentation '+(pres.length+1));renderEditList();}
+function removeRow(i){if(pres.length<=1){alert('Must have at least one.');return;}pres.splice(i,1);renderEditList();}
+async function saveTitles(){var ins=document.querySelectorAll('[id^="ep-"]'),titles=[];ins.forEach(function(el){var v=el.value.trim();if(v)titles.push(v);});if(!titles.length){alert('Add at least one.');return;}pres=titles;try{await window._set(cfgRef(),{presentations:pres,adminPassword:adminPwd});alert('Saved!');updateStats();renderByPres();}catch(e){alert('Error: '+e.message);}}
+async function doChangePwd(){var p1=$i('p1').value,p2=$i('p2').value,m=$i('pwdMsg');if(!p1){m.style.color='#c0392b';m.textContent='Enter a password.';return;}if(p1!==p2){m.style.color='#c0392b';m.textContent='Passwords do not match.';return;}adminPwd=p1;try{await window._set(cfgRef(),{presentations:pres,adminPassword:adminPwd});m.style.color='var(--fern)';m.textContent='Updated!';$i('p1').value='';$i('p2').value='';}catch(e){m.style.color='#c0392b';m.textContent='Error: '+e.message;}}
+
+async function doClear(){
+  if(!window._db||typeof window._getDocs!=='function'||typeof window._deleteDoc!=='function'){alert('Firebase not ready.');return;}
+  if(!confirm('Delete ALL responses? This cannot be undone.'))return;
+  var btn=$i('clearBtn');
+  if(btn){btn.textContent='Deleting...';btn.disabled=true;}
+  var deleted=0,errors=[],found=0;
+  try{
+    for(var i=0;i<Math.max(pres.length,20);i++){
+      try{
+        var colRef=window._col(window._db,'presentations_m05/'+i+'/responses');
+        var snap=await window._getDocs(colRef);
+        found+=snap.size;
+        for(var j=0;j<snap.docs.length;j++){
+          try{await window._deleteDoc(snap.docs[j].ref);deleted++;}catch(de){errors.push('del:'+de.message);}
+        }
+      }catch(ce){errors.push('read'+i+':'+ce.message);}
+    }
+  }catch(oe){errors.push('outer:'+oe.message);}
+  if(btn){btn.textContent='Reset All Responses';btn.disabled=false;}
+  live={};renderByPres();renderAll();updateStats();
+  alert('Found '+found+' docs, deleted '+deleted+'.'+(errors.length?' Errors: '+errors.slice(0,3).join(' | '):''));
+}
+
+function doExport(){var rows=[['Student','Presentation','Positive Type','Positive Response','Constructive Type','Constructive Response','Time']];pres.forEach(function(t,i){(live[i]||[]).forEach(function(r){rows.push([r.name||'',t,r.b1type||'',r.b1text||'',r.b2type||'',r.b2text||'',r.ts&&r.ts.seconds?new Date(r.ts.seconds*1000).toLocaleString():'']);});});var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='peer_review_m05.csv';a.click();}
+
+function exportPDF(){if(!window.jspdf){alert('PDF library not loaded yet.');return;}var jsPDF=window.jspdf.jsPDF,doc=new jsPDF({unit:'pt',format:'letter'}),PW=612,PH=792,L=54,R=54,TW=504,y=54;function addPage(){doc.addPage();y=54;}function need(h){if(y+h>PH-54)addPage();}function split(txt,sz,style){doc.setFont('helvetica',style||'normal');doc.setFontSize(sz);return doc.splitTextToSize(String(txt||''),TW);}doc.setFillColor(26,74,90);doc.rect(0,0,PW,96,'F');doc.setFillColor(74,140,42);doc.rect(0,0,5,96,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(90,174,200);doc.text('ART 104 - MODULE 05 [P2] - NATURE: SPECULATIVE ARTWORK',L,26);doc.setFont('helvetica','bold');doc.setFontSize(22);doc.setTextColor(255,255,255);doc.text('Peer Review Notes',L,52);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(138,184,122);var dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});doc.text(user+' - '+dateStr,L,72);y=116;pres.forEach(function(title,i){if(!done.has(i))return;var b1label=($i('s1-'+i)||{}).value||'Positive Observation',b1text=($i('t1-'+i)||{}).value||'(no response)',b2label=($i('s2-'+i)||{}).value||'Constructive Suggestion',b2text=($i('t2-'+i)||{}).value||'(no response)',lh8=8*1.4,lh11=11*1.4,pad2=12,lbl1l=split(b1label.toUpperCase(),8,'bold'),body1l=split(b1text,11,'normal'),lbl2l=split(b2label.toUpperCase(),8,'bold'),body2l=split(b2text,11,'normal'),box1H=pad2+lbl1l.length*lh8+4+body1l.length*lh11+pad2,box2H=pad2+lbl2l.length*lh8+4+body2l.length*lh11+pad2;need(36+box1H+box2H+20);doc.setFillColor(26,74,90);doc.roundedRect(L-6,y,TW+12,32,3,3,'F');doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(90,174,200);doc.text('PRESENTATION '+(i+1),L+10,y+11);doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(255,255,255);doc.text(title,L+10,y+25);y+=40;doc.setFillColor(232,245,232);doc.setDrawColor(74,140,42);doc.roundedRect(L-6,y,TW+12,box1H,4,4,'FD');doc.setFillColor(74,140,42);doc.roundedRect(L-6,y,4,box1H,2,2,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(45,90,27);doc.text(lbl1l,L+8,y+pad2+lh8*.8);doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(26,46,26);doc.text(body1l,L+8,y+pad2+lbl1l.length*lh8+4+lh11*.8);y+=box1H+8;doc.setFillColor(224,242,245);doc.setDrawColor(42,112,144);doc.roundedRect(L-6,y,TW+12,box2H,4,4,'FD');doc.setFillColor(42,112,144);doc.roundedRect(L-6,y,4,box2H,2,2,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(26,74,90);doc.text(lbl2l,L+8,y+pad2+lh8*.8);doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(26,46,26);doc.text(body2l,L+8,y+pad2+lbl2l.length*lh8+4+lh11*.8);y+=box2H+18;});var total=doc.internal.getNumberOfPages();for(var p=1;p<=total;p++){doc.setPage(p);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(74,140,42);doc.text(user+' - Peer Review Notes',L,PH-22);doc.text('Page '+p+' of '+total,PW/2,PH-22,{align:'center'});doc.text(dateStr,PW-R,PH-22,{align:'right'});}doc.save(user.replace(/\s+/g,'_')+'_Peer_Review_M05.pdf');}
+</script>
+</body>
+</html>
